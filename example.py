@@ -6,15 +6,27 @@ Rectangle = namedtuple('Rectangle', ['x', 'y', 'w', 'h'])
 
 
 def main():
-    boxes = [
-        [5, 3], [5, 3], [2, 4], [30, 8], [10, 20],
-        [20, 10], [5, 5], [5, 5], [10, 10], [10, 5],
-        [6, 4], [1, 10], [8, 4], [6, 6], [20, 14]
-    ]
-    width = 30
-    height, rectangles = phspprg(width, boxes)
-    visualize(width, height, rectangles)
-    print("The height is: {}".format(height))
+    boxes = []
+    width = 0
+    with open('input.txt', 'r') as f:
+        lines = f.readlines()
+        width = int(lines[0].rsplit(':')[1].rstrip())
+        # print(width)
+        for i in range(3, len(lines)-1):
+            items = lines[i].rstrip().split(',')
+            items[0] = int(items[0])
+            items[1] = int(items[1])
+            boxes.append(items)
+        # print(boxes)
+
+    w_height, w_rectangles = phspprg(width, boxes, "width")
+    h_height, h_rectangles = phspprg(width, boxes, "height")
+    if w_height < h_height:
+        print("The height is: {}".format(w_height))
+        visualize(width, w_height, w_rectangles)
+    else:
+        print("The height is: {}".format(h_height))
+        visualize(width, h_height, h_rectangles)
 
 
 if __name__ == "__main__":
