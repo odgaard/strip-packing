@@ -42,6 +42,7 @@ def phspprg(width, rectangles, sorting="width"):
         the width and height (which can be flipped compared to input).
 
     """
+    rotate = 0
     if sorting not in ["width", "height" ]:
         raise ValueError("The algorithm only supports sorting by width or height but {} was given.".format(sorting))
     if sorting == "width":
@@ -51,11 +52,12 @@ def phspprg(width, rectangles, sorting="width"):
     logger.debug('The original array: {}'.format(rectangles))
     result = [None] * len(rectangles)
     remaining = deepcopy(rectangles)
-    for idx, r in enumerate(remaining):
-        if r[0] > r[1]:
-            remaining[idx][0], remaining[idx][1] = remaining[idx][1], remaining[idx][0]
-    logger.debug('Swapped some widths and heigt with the following result: {}'.format(remaining))
-    sorted_indices = sorted(range(len(remaining)), key=lambda x: -remaining[x][wh])
+    if(rotate):
+        for idx, r in enumerate(remaining):
+            if r[0] > r[1]:
+                remaining[idx][0], remaining[idx][1] = remaining[idx][1], remaining[idx][0]
+        logger.debug('Swapped some widths and heigt with the following result: {}'.format(remaining))
+    sorted_indices = sorted(range(len(remaining)), key=lambda x: -remaining[x][0])
     logger.debug('The sorted indices: {}'.format(sorted_indices))
     sorted_rect = [remaining[idx] for idx in sorted_indices]
     logger.debug('The sorted array is: {}'.format(sorted_rect))
@@ -63,13 +65,25 @@ def phspprg(width, rectangles, sorting="width"):
     while sorted_indices:
         idx = sorted_indices.pop(0)
         r = remaining[idx]
-        if r[1] > width:
-            result[idx] = Rectangle(x, y, r[0], r[1])
-            x, y, w, h, H = r[0], H, width - r[0], r[1], H + r[1]
+        if(rotate):
+            if r[1] > width:
+                result[idx] = Rectangle(x, y, r[0], r[1])
+                x, y, w, h, H = r[0], H, width - r[0], r[1], H + r[1]
+                # print(10, result[idx], x, y, r[0], r[1])
+            else:
+                result[idx] = Rectangle(x, y, r[1], r[0])
+                # print(20, result[idx], x, y, r[1], r[0])
+                x, y, w, h, H = r[1], H, width - r[1], r[0], H + r[0]
         else:
+            # if r[1] > width:
+                # print(100, r[1], width)
             result[idx] = Rectangle(x, y, r[1], r[0])
+            # x, y, w, h, H = r[0], H, width - r[0], r[1], H + r[1]
             x, y, w, h, H = r[1], H, width - r[1], r[0], H + r[0]
+            # print(30, result[idx], x, y, r[1], r[0])
         recursive_packing(x, y, w, h, remaining, sorted_indices, result)
+        # recursive_packing(0, 0, width, H, remaining, sorted_indices, result)
+        # recursive_packing(w, H, width-w, h, remaining, sorted_indices, result)
         x, y = 0, H
     logger.debug('The resulting rectangles are: {}'.format(result))
 
@@ -79,8 +93,9 @@ def phspprg(width, rectangles, sorting="width"):
 def recursive_packing(x, y, w, h, remaining, indices, result):
     """Helper function to recursively fit a certain area."""
     priority = 6
+    rotation = 1 # 2 for enabled, 1 for disabled
     for idx in indices:
-        for D in range(0, 2):
+        for D in range(0, rotation):
             if priority > 1 and remaining[idx][(0 + D) % 2] == w and remaining[idx][(1 + D) % 2] == h:
                 priority, orientation, best = 1, D, idx
                 break
@@ -98,6 +113,7 @@ def recursive_packing(x, y, w, h, remaining, indices, result):
         else:
             omega, d = remaining[best][1], remaining[best][0]
         result[best] = Rectangle(x, y, omega, d)
+        # print(result[best], x, y, omega, d)
         indices.remove(best)
         if priority == 2:
             recursive_packing(x, y + d, w, h - d, remaining, indices, result)
@@ -110,16 +126,20 @@ def recursive_packing(x, y, w, h, remaining, indices, result):
                 min_w = min(min_w, remaining[idx][0])
                 min_h = min(min_h, remaining[idx][1])
             # Because we can rotate:
-            min_w = min(min_h, min_w)
-            min_h = min_w
+            #min_w = min(min_h, min_w)
+            #min_h = min_w
             if w - omega < min_w:
+                # print(0, y + d, w, h - d, y, d, w, h)
                 recursive_packing(x, y + d, w, h - d, remaining, indices, result)
             elif h - d < min_h:
+                # print(1)
                 recursive_packing(x + omega, y, w - omega, h, remaining, indices, result)
             elif omega < min_w:
+                # print(2)
                 recursive_packing(x + omega, y, w - omega, d, remaining, indices, result)
                 recursive_packing(x, y + d, w, h - d, remaining, indices, result)
             else:
+                # print(3, remaining, result)
                 recursive_packing(x, y + d, omega, h - d, remaining, indices, result)
                 recursive_packing(x + omega, y, w - omega, h, remaining, indices, result)
 
