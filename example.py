@@ -19,15 +19,14 @@ def main():
             boxes.append(items)
         # print(boxes)
 
-    w_height, w_rectangles = phspprg(width, boxes, "width")
-    h_height, h_rectangles = phspprg(width, boxes, "height")
+    w_height, w_rectangles = phsppog(width, boxes, "width")
+    h_height, h_rectangles = phsppog(width, boxes, "height")
     if w_height < h_height:
         print("The height is: {}".format(w_height))
         visualize(width, w_height, w_rectangles)
     else:
         print("The height is: {}".format(h_height))
         visualize(width, h_height, h_rectangles)
-
 
 if __name__ == "__main__":
     main()
